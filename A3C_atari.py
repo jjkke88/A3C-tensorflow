@@ -277,7 +277,7 @@ def main(_):
             os.remove(os.path.join(flags.train_dir, f))
     # model
     model = A3CAtari()
-    model.train()
+    model.test_sync()
 
 if __name__ == "__main__":
     tf.app.run()
