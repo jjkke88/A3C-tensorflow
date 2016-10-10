@@ -33,6 +33,8 @@ tf.app.flags.DEFINE_float("gamma", 0.95, "discounted ratio")
 
 tf.app.flags.DEFINE_float("train_step", 0, "train step. unchanged")
 
+tf.app.flags.DEFINE_float("eGreedy", 0.8, "eGreedy value")
+
 flags = tf.app.flags.FLAGS
 
 
@@ -362,7 +364,7 @@ class A3CSingleThread(threading.Thread):
         rollout_path = {"state": [], "action": [], "rewards": [], "done": []}
         while not terminal and (train_step - t_start <= flags.t_max):
             pi_probs = self.local_net.get_policy(self.master.sess, self.env.state)
-            if random.random() < 0.8:
+            if random.random() < flags.eGreedy:
                 action = self.weighted_choose_action(pi_probs)
             else:
                 action = random.randint(0, self.env.action_dim - 1)
@@ -390,7 +392,7 @@ class A3CSingleThread(threading.Thread):
             sess.run(self.reset_accum_grads_ops)
             # sync variables
             sess.run(self.sync)
-            # forward explore
+            # forward explore t_max steps
             train_step, rollout_path = self.forward_explore(train_step)
             # rollout for discounted R values
             if rollout_path["done"][-1]:
@@ -400,6 +402,7 @@ class A3CSingleThread(threading.Thread):
                     self.local_net.reset_lstm_state()
             else:
                 rollout_path["rewards"][-1] = self.local_net.get_value(sess, rollout_path["state"][-1])
+
             rollout_path["returns"] = self.discount(rollout_path["rewards"])
             # accumulate gradients
             lc_net = self.local_net
@@ -461,7 +464,7 @@ class A3CAtari(object):
         # local training threads
         self.jobs = []
         for thread_id in xrange(flags.jobs):
-            job = A3CSingleThread(thread_id, self)
+            job = A3CSingleThread(thread_id, self) # self is master
             self.jobs.append(job)
         # session
         self.sess = tf.Session(config=tf.ConfigProto(log_device_placement=False,
