@@ -44,3 +44,6 @@ class AtariEnv(object):
         # clip reward in range(-1, 1)
         reward = np.clip(reward, -1, 1)
         return self.state, reward, done
+
+    def render(self):
+        self.env.render()
