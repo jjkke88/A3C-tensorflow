@@ -83,11 +83,13 @@ class A3CAtari(object):
 
     def test(self):
         self.env.reset_env()
-        self.saver.restore(self.sess, "models/experiment0/a3c_model-2533")
+        self.saver.restore(self.sess, "models/experiment0/a3c_model-51938")
         done = False
         map(lambda job: self.sess.run(job.sync), self.jobs)
         step = 0
-        self.jobs[0].forward_explore(10000)
+        # self.jobs[0].forward_explore(10000)
+        self.jobs[0].test_phase()
+
         print "done!"
 
 def signal_handler():
@@ -104,8 +106,10 @@ def main(_):
             os.remove(os.path.join(flags.train_dir, f))
     # model
     model = A3CAtari()
-    # model.train()
-    model.test()
+    if flags.train_flag:
+        model.train()
+    else:
+        model.test()
 
 if __name__ == "__main__":
     tf.app.run()

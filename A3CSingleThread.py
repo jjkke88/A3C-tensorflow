@@ -108,8 +108,6 @@ class A3CSingleThread(threading.Thread):
             else:
                 action = random.randint(0, self.env.action_dim - 1)
             _, reward, terminal = self.env.forward_action(action)
-            if flags.test:
-                self.env.render()
             train_step += 1
             rollout_path["state"].append(self.env.state)
             one_hot_action = np.zeros(self.env.action_dim)
@@ -179,6 +177,8 @@ class A3CSingleThread(threading.Thread):
             while not terminal and test_step < max_step:
                 pi_probs = self.local_net.get_policy(self.master.sess, self.env.state)
                 action = self.weighted_choose_action(pi_probs)
+                if flags.train_flag is not True:
+                    self.env.render()
                 _, reward, terminal = self.env.forward_action(action)
                 test_step += 1
                 episode_reward += reward
